@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import css from "./Modal.module.css";
 
@@ -8,39 +8,29 @@ interface ModalProps {
   isOpen: boolean;
 }
 
-const Modal = ({ children, onClose, isOpen }: ModalProps) => {
-  const [mounted, setMounted] = useState(false);
+const Modal = ({ children, onClose }: ModalProps) => {
+  const modalRoot = document.querySelector("#modal-root");
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    setMounted(true);
-
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.code === "Escape") {
-        onClose();
-      }
+      if (e.code === "Escape") onClose();
     };
 
-    if (isOpen) {
-      window.addEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = "hidden";
-    }
+    window.addEventListener("keydown", handleKeyDown);
+
+    document.body.style.overflow = "hidden";
 
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = "auto";
+      document.body.style.overflow = "unset";
     };
-  }, [isOpen, onClose]);
+  }, [onClose]);
 
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.currentTarget === e.target) {
+    if (e.target === e.currentTarget) {
       onClose();
     }
   };
-
-  if (!mounted || !isOpen) return null;
-
-  const modalRoot = document.getElementById("modal-root") as HTMLElement;
 
   if (!modalRoot) return null;
 
