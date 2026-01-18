@@ -1,13 +1,33 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import Link from "next/link";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { deleteNote } from "@/lib/api";
 import { Note } from "@/types/note";
 import css from "./NoteList.module.css";
 
 interface NoteListProps {
   notes: Note[];
-  onDelete: (id: string) => void;
 }
 
-const NoteList = ({ notes, onDelete }: NoteListProps) => {
+const NoteList = ({ notes }: NoteListProps) => {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: deleteNote,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notes"] });
+    },
+    onError: (err: any) => {
+      alert(`Error deleting note: ${err.message}`);
+    },
+  });
+
+  const handleDelete = (id: string) => {
+    if (confirm("Are you sure you want to delete this note?")) {
+      mutation.mutate(id);
+    }
+  };
+
   return (
     <ul className={css.list}>
       {notes.map((note) => (
@@ -27,9 +47,10 @@ const NoteList = ({ notes, onDelete }: NoteListProps) => {
               <button
                 type="button"
                 className={css.button}
-                onClick={() => onDelete(note.id)}
+                onClick={() => handleDelete(note.id)}
+                disabled={mutation.isPending}
               >
-                Delete
+                {mutation.isPending ? "..." : "Delete"}
               </button>
             </div>
           </div>

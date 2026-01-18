@@ -1,10 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { useDebounce } from "use-debounce";
-import { fetchNotes, createNote, deleteNote } from "@/lib/api";
-import { CreateNoteData, Note } from "@/types/note";
+import { fetchNotes } from "@/lib/api";
 import NoteList from "@/components/NoteList/NoteList";
 import SearchBox from "@/components/SearchBox/SearchBox";
 import Pagination from "@/components/Pagination/Pagination";
@@ -18,7 +17,6 @@ const NotesClient = () => {
   const [debouncedSearch] = useDebounce(search, 300);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const queryClient = useQueryClient();
   const PER_PAGE = 6;
 
   const handleSearch = (value: string) => {
@@ -30,38 +28,8 @@ const NotesClient = () => {
     queryKey: ["notes", page, debouncedSearch],
     queryFn: () =>
       fetchNotes({ page, perPage: PER_PAGE, search: debouncedSearch }),
+    placeholderData: keepPreviousData,
   });
-
-  const deleteMutation = useMutation<Note, Error, string>({
-    mutationFn: deleteNote,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notes"] });
-    },
-    onError: (err) => {
-      alert(`Error deleting note: ${err.message}`);
-    },
-  });
-
-  const createMutation = useMutation<Note, Error, CreateNoteData>({
-    mutationFn: createNote,
-    onSuccess: () => {
-      setIsModalOpen(false);
-      queryClient.invalidateQueries({ queryKey: ["notes"] });
-    },
-    onError: (err) => {
-      alert(`Error creating note: ${err.message}`);
-    },
-  });
-
-  const handleDeleteNote = (id: string) => {
-    if (confirm("Are you sure you want to delete this note?")) {
-      deleteMutation.mutate(id);
-    }
-  };
-
-  const handleCreateNote = (noteData: CreateNoteData) => {
-    createMutation.mutate(noteData);
-  };
 
   const handlePageClick = (pageNumber: number) => {
     setPage(pageNumber);
@@ -92,7 +60,7 @@ const NotesClient = () => {
 
       {notes.length > 0 ? (
         <>
-          <NoteList notes={notes} onDelete={handleDeleteNote} />
+          <NoteList notes={notes} />
 
           {totalPages > 1 && (
             <Pagination
@@ -107,10 +75,7 @@ const NotesClient = () => {
       )}
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-        <NoteForm
-          onSubmit={handleCreateNote}
-          onCancel={() => setIsModalOpen(false)}
-        />
+        <NoteForm onCancel={() => setIsModalOpen(false)} />
       </Modal>
     </div>
   );
