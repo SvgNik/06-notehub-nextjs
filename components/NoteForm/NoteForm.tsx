@@ -1,14 +1,13 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import type { FormikHelpers } from "formik";
 import * as Yup from "yup";
-import { useMutation, useQueryClient } from "@tanstack/react-query"; // Додано
-import { createNote } from "@/lib/api"; // Додано імпорт API
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { createNote } from "@/lib/api";
 import { CreateNoteData } from "@/types/note";
 import css from "./NoteForm.module.css";
 
 interface NoteFormProps {
-  onCancel: () => void; // onSubmit більше не потрібен у пропсах
+  onCancel: () => void;
 }
 
 const validationSchema = Yup.object().shape({
@@ -37,7 +36,7 @@ const NoteForm = ({ onCancel }: NoteFormProps) => {
       queryClient.invalidateQueries({ queryKey: ["notes"] });
       onCancel();
     },
-    onError: (err: any) => {
+    onError: (err: Error) => {
       alert(`Error creating note: ${err.message}`);
     },
   });
